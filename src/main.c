@@ -12,6 +12,10 @@ int get_seconds_round(float duration) {
   return ((int)duration % 60);
 }
 
+bool collide_point_rect(Vector2 p, Rectangle r) {
+  return r.x + r.width >= p.x && r.x <= p.x && r.y + r.height >= p.y && r.y <= p.y;
+}
+
 int main(int argc, char **argv) {
   const int screen_width = 800;
   const int screen_height = 800;
@@ -20,10 +24,10 @@ int main(int argc, char **argv) {
   
   SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
-  const int font_size_small = screen_width / 33;
+  const int font_size_small = screen_width / 33; // Tenth of third
 
-  bool play = false;
-  bool last_play = false;
+  bool play = true;
+  bool last_play = true;
 
   char song_name[255];
   int song_index = 0;
@@ -42,6 +46,9 @@ int main(int argc, char **argv) {
   music = LoadMusicStream(song_name);
   PlayMusicStream(music);
 
+  // Progress Bar
+  Rectangle progress_bar_rect = (Rectangle){screen_width / 2 - screen_width / 3, screen_height / 10 * 8, screen_width / 3 * 2, screen_height / 20};
+
   /*
   if (!music) {
     printf("ERROR: Failed to load \"%s\" to music stream.\n", song_name);
@@ -51,20 +58,49 @@ int main(int argc, char **argv) {
 
   while (!WindowShouldClose()) {
     /* Updating */
-    UpdateMusicStream(music);
 
     // Play/Pause when space is pressed 
     if (IsKeyPressed(KEY_SPACE)) {
       play = !play;
       last_play = play;
-      if (play) ResumeMusicStream(music);
-      else PauseMusicStream(music);
+      goto set_stream_state;
     } else if (last_play != play) {
       // Play/Pause when play is changed 
       last_play = play;
+      // Is this illegal?
+      set_stream_state:
       if (play) ResumeMusicStream(music);
       else PauseMusicStream(music);
     }
+
+    // Seek 10 seconds right
+    if (IsKeyPressed(KEY_RIGHT)) {
+      if (GetMusicTimePlayed(music) + 10 <= GetMusicTimeLength(music))
+        SeekMusicStream(music, GetMusicTimePlayed(music) + 10.0f);
+      else
+        SeekMusicStream(music, GetMusicTimeLength(music));
+    }
+
+    // Seek 10 seconds left
+    if (IsKeyPressed(KEY_LEFT)) {
+      if (GetMusicTimePlayed(music) - 10 >= 0)
+        SeekMusicStream(music, GetMusicTimePlayed(music) - 10.0f);
+      else
+        SeekMusicStream(music, 0.0f);
+    }
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+      Vector2 mouse_pos = GetMousePosition();
+
+      // Click to seek
+      if (collide_point_rect(mouse_pos, progress_bar_rect)) {
+        float rect_percentage = (mouse_pos.x - progress_bar_rect.x) / progress_bar_rect.width;
+        SeekMusicStream(music, rect_percentage * GetMusicTimeLength(music));
+      }
+    }
+
+    // Process audio frame after inputs 
+    UpdateMusicStream(music);
 
     // Update time played
     time_played = GetMusicTimePlayed(music) / GetMusicTimeLength(music);
@@ -81,7 +117,7 @@ int main(int argc, char **argv) {
       ClearBackground(RAYWHITE);
       GuiToggle((Rectangle){screen_width / 2 - screen_width / 16, screen_height / 10 * 9 - font_size_small / 2, 100, font_size_small}, play ? "Play" : "Pause", &play);
 
-      GuiProgressBar((Rectangle){screen_width / 2 - screen_width / 3, screen_height / 10 * 8, screen_width / 3 * 2, screen_height / 20}, time_progress_str, time_togo_str, &time_played, 0.0f, 1.0f);
+      GuiProgressBar(progress_bar_rect, time_progress_str, time_togo_str, &time_played, 0.0f, 1.0f);
 
     EndDrawing();
   }
