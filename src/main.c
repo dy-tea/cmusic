@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include "raylib.h"
+#include <unistd.h>
+#include <raylib.h>
 
 #define RAYGUI_IMPLEMENTATION
-#include "../include/raygui.h"
+#include <raygui.h>
 
 int get_minutes_round(float duration) {
   return ((int)duration / 60);
@@ -14,6 +15,26 @@ int get_seconds_round(float duration) {
 
 bool collide_point_rect(Vector2 p, Rectangle r) {
   return r.x + r.width >= p.x && r.x <= p.x && r.y + r.height >= p.y && r.y <= p.y;
+}
+
+char *get_image_file(const char *path) {
+  char command[1024];
+  unsigned char data[51200];
+
+  const char *out_path = "/tmp/";
+
+  char path_cpy[strlen(path)]; 
+  memcpy(path_cpy, path, strlen(path));
+  char *no_ext = strtok(path_cpy, ".");
+  
+  sprintf(command, "ffmpeg -n -i \"%s\" -filter:v scale=512:-1 -update true \"%s%s.png\"", path, out_path, path_cpy);
+  printf("NOTE: Running command \"%s\"\n", command);
+  system(command);
+
+  char *file_path = malloc(255);
+  sprintf(file_path, "%s%s.png", out_path, no_ext);
+
+  return file_path;
 }
 
 int main(int argc, char **argv) {
@@ -38,6 +59,13 @@ int main(int argc, char **argv) {
     printf("NOTE: No music file specified.\n");
   }
 
+  // Load music image if present
+  // TODO
+  char *cover_image_path = get_image_file(song_name);
+  printf("Cover Image path: %s\n", cover_image_path);
+  Texture2D cover_texture = LoadTexture(cover_image_path);
+  free(cover_image_path);
+
   // Music stream
   InitAudioDevice();
   Music music;
@@ -49,13 +77,7 @@ int main(int argc, char **argv) {
   // Progress Bar
   Rectangle progress_bar_rect = (Rectangle){screen_width / 2 - screen_width / 3, screen_height / 10 * 8, screen_width / 3 * 2, screen_height / 20};
 
-  /*
-  if (!music) {
-    printf("ERROR: Failed to load \"%s\" to music stream.\n", song_name);
-    return 1;
-  }
-  */
-
+  // Main loop
   while (!WindowShouldClose()) {
     /* Updating */
 
@@ -115,8 +137,8 @@ int main(int argc, char **argv) {
     BeginDrawing();
 
       ClearBackground(RAYWHITE);
+      DrawTexture(cover_texture, (screen_width - 512) / 2, 100, WHITE);
       GuiToggle((Rectangle){screen_width / 2 - screen_width / 16, screen_height / 10 * 9 - font_size_small / 2, 100, font_size_small}, play ? "Play" : "Pause", &play);
-
       GuiProgressBar(progress_bar_rect, time_progress_str, time_togo_str, &time_played, 0.0f, 1.0f);
 
     EndDrawing();

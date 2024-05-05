@@ -1,11 +1,13 @@
 #define NOBUILD_IMPLEMENTATION
 #include "nobuild.h"
 
-#define CFLAGS "-Wall", "-Wextra", "-std=c99", "-lraylib", "-lGL", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"
+#define CFLAGS "-Wall", "-Wextra", "-std=c99"
+#define LIBS "-lraylib", "-lGL", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"
 
 void build(Cstr path) {
+  Cstr inc_dir = PATH("-I", path_get_current_dir(), "include");
 #ifndef _WIN32
-  CMD("cc", CFLAGS, "-o", NOEXT(path), path);
+  CMD("cc", CFLAGS, inc_dir, LIBS, "-o", NOEXT(path), path);
 #else
   CMD("cl.exe", "/Fe.\\src\\", path);
 #endif
