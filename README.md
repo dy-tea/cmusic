@@ -1,7 +1,7 @@
 # cmusic
 
 ### Dependencies
-This project uses `raylib` and `raygui` for graphics and audio. It also uses `ffmpeg` for media conversion and `zenity`to open the file dialog.
+This project uses `raylib` and `raygui` for graphics and audio. It also uses `ffmpeg` for media conversion and `zenity` to open the file dialog.
 
 ### Building
 Build the build system.
