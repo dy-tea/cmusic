@@ -17,17 +17,32 @@ bool collide_point_rect(Vector2 p, Rectangle r) {
   return r.x + r.width >= p.x && r.x <= p.x && r.y + r.height >= p.y && r.y <= p.y;
 }
 
+char* basename(char* path) {
+  int len = strlen(path);
+
+  for (int i = len - 1; i > 0; i--)
+    if (path[i] == '/') {
+      path = path + i + 1;
+      break;
+    }
+
+  return path;
+}
+
 char *get_image_file(const char *path) {
   char command[1024];
   unsigned char data[51200];
 
-  const char *out_path = "/tmp/";
+  const char* out_path = "/tmp/";
 
-  char path_cpy[strlen(path)]; 
-  memcpy(path_cpy, path, strlen(path));
-  char *no_ext = strtok(path_cpy, ".");
+  const char* filename = basename(path);
+  printf("BASENAME: %s\n", filename);
+
+  char filename_cpy[strlen(filename)]; 
+  memcpy(filename_cpy, filename, strlen(filename));
+  char *no_ext = strtok(filename_cpy, ".");
   
-  sprintf(command, "ffmpeg -n -i \"%s\" -filter:v scale=512:-1 -update true \"%s%s.png\"", path, out_path, path_cpy);
+  sprintf(command, "ffmpeg -n -i \"%s\" -filter:v scale=512:-1 -update true \"%s%s.png\"", path, out_path, no_ext);
   printf("NOTE: Running command \"%s\"\n", command);
   system(command);
 
@@ -35,6 +50,29 @@ char *get_image_file(const char *path) {
   sprintf(file_path, "%s%s.png", out_path, no_ext);
 
   return file_path;
+}
+
+char* file_dialog() {
+  char command[256];
+  snprintf(command, sizeof(command), "zenity --file-selection --title='Open Audio File' --file-filter='Music Files | *.mp3 *.wav *.ogg *.flac'");
+
+  FILE *fp = popen(command, "r");
+  if (fp == NULL) {
+    printf("ERROR: Failed to open file dialog process");
+    return "";
+  }
+
+  static char path[1024];
+  if (fgets(path, sizeof(path), fp) != NULL) {
+    path[strcspn(path, "\n")] = 0;
+    printf("NOTE: Selected file: %s\n", path);
+  } else {
+    printf("NOTE: No file selected");
+  }
+
+  pclose(fp);
+
+  return path;
 }
 
 int main(int argc, char **argv) {
@@ -49,30 +87,37 @@ int main(int argc, char **argv) {
 
   bool play = true;
   bool last_play = true;
+  bool music_loaded = false;
 
-  char song_name[255];
+  char song_name[1024];
   int song_index = 0;
   if (argc > 1) {
     snprintf(song_name, 255, "%s", argv[song_index + 1]);
     printf("NOTE: Received \"%s\"\n", song_name);
+    music_loaded = true;
   } else {
-    printf("NOTE: No music file specified.\n");
+    printf("NOTE: No music file specified\n");
   }
 
   // Load music image if present
-  // TODO
-  char *cover_image_path = get_image_file(song_name);
-  printf("Cover Image path: %s\n", cover_image_path);
-  Texture2D cover_texture = LoadTexture(cover_image_path);
-  free(cover_image_path);
+  char *cover_image_path = NULL;
+  Texture2D cover_texture = {0};
+  if (music_loaded) {
+   cover_image_path = get_image_file(song_name);
+   printf("Cover Image path: %s\n", cover_image_path);
+   cover_texture = LoadTexture(cover_image_path);
+  }
 
   // Music stream
   InitAudioDevice();
-  Music music;
+  Music music = {0};
   float time_played = 0.0f;
-
-  music = LoadMusicStream(song_name);
-  PlayMusicStream(music);
+  
+  if (music_loaded) {
+    music = LoadMusicStream(song_name);
+    PlayMusicStream(music);
+  } else
+    printf("NOTE: No music loaded\n");
 
   // Progress Bar
   Rectangle progress_bar_rect = (Rectangle){screen_width / 2 - screen_width / 3, screen_height / 10 * 8, screen_width / 3 * 2, screen_height / 20};
@@ -122,7 +167,7 @@ int main(int argc, char **argv) {
     }
 
     // Process audio frame after inputs 
-    UpdateMusicStream(music);
+    if (music_loaded) UpdateMusicStream(music);
 
     // Update time played
     time_played = GetMusicTimePlayed(music) / GetMusicTimeLength(music);
@@ -137,12 +182,34 @@ int main(int argc, char **argv) {
     BeginDrawing();
 
       ClearBackground(RAYWHITE);
-      DrawTexture(cover_texture, (screen_width - 512) / 2, 100, WHITE);
+
+      if (cover_image_path != NULL)
+        DrawTexture(cover_texture, (screen_width - 512) / 2, 100, WHITE);
+
+      if (GuiButton((Rectangle){20, 20, 40, 40}, "#11#")) {
+	char last_song_name[sizeof(song_name)];
+	strcpy(last_song_name, song_name);
+	const char* dialog = file_dialog();
+	strcpy(song_name, dialog);
+	if (&song_name[0] != &last_song_name[0]) {
+	  music = LoadMusicStream(song_name); 
+	  music_loaded = true;
+    	  PlayMusicStream(music);
+
+	  cover_image_path = get_image_file(song_name);
+   	  printf("Cover Image path: %s\n", cover_image_path);
+          cover_texture = LoadTexture(cover_image_path);
+	}
+      }
+
       GuiToggle((Rectangle){screen_width / 2 - screen_width / 16, screen_height / 10 * 9 - font_size_small / 2, 100, font_size_small}, play ? "Play" : "Pause", &play);
+
       GuiProgressBar(progress_bar_rect, time_progress_str, time_togo_str, &time_played, 0.0f, 1.0f);
 
     EndDrawing();
   }
+  
+  free(cover_image_path);
 
   UnloadMusicStream(music);
   CloseAudioDevice();

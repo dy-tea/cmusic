@@ -1,7 +1,7 @@
 #define NOBUILD_IMPLEMENTATION
 #include "nobuild.h"
 
-#define CFLAGS "-Wall", "-Wextra", "-std=c99"
+#define CFLAGS "-Wall", "-Wextra", "-std=gnu99"
 #define LIBS "-lraylib", "-lGL", "-lm", "-lpthread", "-ldl", "-lrt", "-lX11"
 
 void build(Cstr path) {
