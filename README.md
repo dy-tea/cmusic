@@ -1,4 +1,5 @@
 # cmusic
+![Screenshot](screenshot.png "Screenshot")
 
 ### Dependencies
 This project uses `raylib` and `raygui` for graphics and audio. It also uses `ffmpeg` for media conversion and `zenity` to open the file dialog.
