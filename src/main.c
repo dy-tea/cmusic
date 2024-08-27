@@ -5,6 +5,20 @@
 #define RAYGUI_IMPLEMENTATION
 #include <raygui.h>
 
+// raygui embedded styles
+#define MAX_GUI_STYLES_AVAILABLE 12
+#include "style_jungle.h"
+#include "style_candy.h"
+#include "style_lavanda.h"
+#include "style_cyber.h"
+#include "style_terminal.h"
+#include "style_ashes.h"
+#include "style_bluish.h"
+#include "style_dark.h"
+#include "style_cherry.h"
+#include "style_sunny.h"
+#include "style_enefete.h"
+
 int get_minutes_round(float duration) {
   return ((int)duration / 60);
 }
@@ -84,6 +98,8 @@ int main(int argc, char **argv) {
   SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
   const int font_size_small = screen_width / 33; // Tenth of third
+  int style_active = 0;
+  int prev_style_active = 0;
 
   bool play = true;
   bool last_play = true;
@@ -169,6 +185,28 @@ int main(int argc, char **argv) {
     // Process audio frame after inputs 
     if (music_loaded) UpdateMusicStream(music);
 
+    // Set visual style
+    if (style_active != prev_style_active) {
+      GuiLoadStyleDefault();
+
+      switch (style_active) {
+	case 1:  GuiLoadStyleJungle(); break;
+	case 2:  GuiLoadStyleCandy(); break;
+	case 3:  GuiLoadStyleLavanda(); break;
+	case 4:  GuiLoadStyleCyber(); break;
+	case 5:  GuiLoadStyleTerminal(); break;
+	case 6:  GuiLoadStyleAshes(); break;
+	case 7:  GuiLoadStyleBluish(); break;
+	case 8:  GuiLoadStyleDark(); break;
+	case 9:  GuiLoadStyleCherry(); break;
+	case 10: GuiLoadStyleSunny(); break;
+	case 11: GuiLoadStyleEnefete(); break;
+	default: break;
+      }
+      
+      prev_style_active = style_active;
+    }
+
     // Update time played
     time_played = GetMusicTimePlayed(music) / GetMusicTimeLength(music);
     if (time_played > 1.0f) time_played = 1.0f; 
@@ -181,7 +219,7 @@ int main(int argc, char **argv) {
     /* Drawing */
     BeginDrawing();
 
-      ClearBackground(RAYWHITE);
+      ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
       if (cover_image_path != NULL)
         DrawTexture(cover_texture, (screen_width - 512) / 2, 100, WHITE);
@@ -201,6 +239,8 @@ int main(int argc, char **argv) {
           cover_texture = LoadTexture(cover_image_path);
 	}
       }
+
+      GuiComboBox((Rectangle){screen_width - 160, 20, 140, 40}, "default;Jungle;Candy;Lavanda;Cyber;Terminal;Ashes;Bluish;Dark;Cherry;Sunny;Enefete", &style_active);
 
       GuiToggle((Rectangle){screen_width / 2 - screen_width / 16, screen_height / 10 * 9 - font_size_small / 2, 100, font_size_small}, play ? "Play" : "Pause", &play);
 
