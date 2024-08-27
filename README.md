@@ -5,12 +5,17 @@
 This project uses `raylib` and `raygui` for graphics and audio. It also uses `ffmpeg` for media conversion and `zenity` to open the file dialog.
 
 ### Building
-Build the build system.
+First build the build system.
 ```
 cc -o nob nobuild.c
-./nob
 ```
-Now you can either run `./nob` or `./src/main`.
+Then either build in debug or release.
+```
+# Debug mode
+./nob
+# Release mode
+./nob release
+```
 
 ### Usage
-Either input a file through args `./src/main myfile.wav` or run the player first and use the file picker.
+Either input a file through args `./target/cmusic myfile.wav` or run the player first and use the file picker.
