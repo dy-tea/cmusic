@@ -1,0 +1,6 @@
+[submodule "nobuild"]
+	path = nobuild
+	url = https://github.com/tsoding/nobuild
+[submodule "raygui"]
+	path = raygui
+	url = https://github.com/raysan5/raygui

@@ -8,16 +8,16 @@
 // raygui embedded styles
 #define MAX_GUI_STYLES_AVAILABLE 12
 #include "style_jungle.h"
-#include "style_candy.h"
+//#include "style_candy.h"
 #include "style_lavanda.h"
 #include "style_cyber.h"
 #include "style_terminal.h"
-#include "style_ashes.h"
+//#include "style_ashes.h"
 #include "style_bluish.h"
 #include "style_dark.h"
-#include "style_cherry.h"
-#include "style_sunny.h"
-#include "style_enefete.h"
+//#include "style_cherry.h"
+//#include "style_sunny.h"
+//#include "style_enefete.h"
 
 int get_minutes_round(float duration) {
   return ((int)duration / 60);
@@ -190,17 +190,17 @@ int main(int argc, char **argv) {
       GuiLoadStyleDefault();
 
       switch (style_active) {
-	case 1:  GuiLoadStyleJungle(); break;
-	case 2:  GuiLoadStyleCandy(); break;
-	case 3:  GuiLoadStyleLavanda(); break;
-	case 4:  GuiLoadStyleCyber(); break;
-	case 5:  GuiLoadStyleTerminal(); break;
-	case 6:  GuiLoadStyleAshes(); break;
-	case 7:  GuiLoadStyleBluish(); break;
-	case 8:  GuiLoadStyleDark(); break;
-	case 9:  GuiLoadStyleCherry(); break;
-	case 10: GuiLoadStyleSunny(); break;
-	case 11: GuiLoadStyleEnefete(); break;
+	      case 1:  GuiLoadStyleDark(); break;
+	      case 2:  GuiLoadStyleJungle(); break;
+	      case 3:  GuiLoadStyleLavanda(); break;
+	      case 4:  GuiLoadStyleCyber(); break;
+	      case 5:  GuiLoadStyleTerminal(); break;
+	      case 6:  GuiLoadStyleBluish(); break;
+        //  case 7:  GuiLoadStyleCandy(); break;
+        //	case 8:  GuiLoadStyleAshes(); break;
+        //	case 9:  GuiLoadStyleCherry(); break;
+        //	case 10: GuiLoadStyleSunny(); break;
+        //	case 11: GuiLoadStyleEnefete(); break;
 	default: break;
       }
       
@@ -225,22 +225,22 @@ int main(int argc, char **argv) {
         DrawTexture(cover_texture, (screen_width - 512) / 2, 100, WHITE);
 
       if (GuiButton((Rectangle){20, 20, 40, 40}, "#11#")) {
-	char last_song_name[sizeof(song_name)];
-	strcpy(last_song_name, song_name);
-	const char* dialog = file_dialog();
-	strcpy(song_name, dialog);
-	if (&song_name[0] != &last_song_name[0]) {
-	  music = LoadMusicStream(song_name); 
-	  music_loaded = true;
-    	  PlayMusicStream(music);
+        char last_song_name[sizeof(song_name)];
+        strcpy(last_song_name, song_name);
+        const char* dialog = file_dialog();
+        strcpy(song_name, dialog);
+        if (&song_name[0] != &last_song_name[0]) {
+          music = LoadMusicStream(song_name); 
+          music_loaded = true;
+              PlayMusicStream(music);
 
-	  cover_image_path = get_image_file(song_name);
-   	  printf("Cover Image path: %s\n", cover_image_path);
+          cover_image_path = get_image_file(song_name);
+          printf("Cover Image path: %s\n", cover_image_path);
           cover_texture = LoadTexture(cover_image_path);
-	}
+        }
       }
 
-      GuiComboBox((Rectangle){screen_width - 160, 20, 140, 40}, "default;Jungle;Candy;Lavanda;Cyber;Terminal;Ashes;Bluish;Dark;Cherry;Sunny;Enefete", &style_active);
+      GuiComboBox((Rectangle){screen_width - 160, 20, 140, 40}, "default;Dark;Jungle;Lavanda;Cyber;Terminal;Bluish", &style_active);
 
       GuiToggle((Rectangle){screen_width / 2 - screen_width / 16, screen_height / 10 * 9 - font_size_small / 2, 100, font_size_small}, play ? "Play" : "Pause", &play);
 
